@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width">
+  <title>Derivasjonsoppgaver</title>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+  <script src="/derivasjon/htmx.min.js" defer></script>
+</head>
+<body>
+      <script>
+        document.body.addEventListener("myEvent", function(evt){
+                  MathJax.typeset();
+})
+      </script>
+<div id="main-content" hx-get="/derivasjon/question/1" hx-trigger="load">
+</div>
+</body>
+</html>
