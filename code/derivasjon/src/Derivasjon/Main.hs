@@ -118,15 +118,13 @@ instance ToHtml Answer where
       <> div_ [hxGet_ ("answerPolynomial/" <> show qid), hxTrigger_ "load"] ""
 
 type UserAPI =
-  "derivasjon"
-    :> ( "htmx.min.js" :> Get '[JS] ByteString
-           :<|> Get '[HTML] (Html ())
-           :<|> "question" :> Capture "id" Integer :> Get '[HTML] Question
-           :<|> "questionPost" :> ReqBody '[FormUrlEncoded] Question :> Post '[HTML] Question
-           :<|> "questionPolynomial" :> Capture "id" Integer :> Get '[HTML] (Headers '[HXTriggerAfterSwap] Function)
-           :<|> "answer" :> Capture "id" Integer :> Get '[HTML] Answer
-           :<|> "answerPolynomial" :> Capture "id" Integer :> Get '[HTML] (Headers '[HXTriggerAfterSwap] Function)
-       )
+  "htmx.min.js" :> Get '[JS] ByteString
+    :<|> Get '[HTML] (Html ())
+    :<|> "question" :> Capture "id" Integer :> Get '[HTML] Question
+    :<|> "questionPost" :> ReqBody '[FormUrlEncoded] Question :> Post '[HTML] Question
+    :<|> "questionPolynomial" :> Capture "id" Integer :> Get '[HTML] (Headers '[HXTriggerAfterSwap] Function)
+    :<|> "answer" :> Capture "id" Integer :> Get '[HTML] Answer
+    :<|> "answerPolynomial" :> Capture "id" Integer :> Get '[HTML] (Headers '[HXTriggerAfterSwap] Function)
 
 userAPI :: Proxy UserAPI
 userAPI = Proxy
