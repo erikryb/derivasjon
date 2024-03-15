@@ -51,10 +51,10 @@ showPolynomial (Polynomial coeffs startExp) = (\case "" -> "0"; x -> x) . unword
         (c, e) -> if e > 0 then show c <> "x^{" <> show e <> "}" else "\\frac{" <> show c <> "}{x" <> (if e == (-1) then "" else "^{" <> show (negate e) <> "}") <> "}"
 
 instance ToHtml Polynomial where
-  toHtml p = toHtml $ "\\[" <> showPolynomial p <> "\\]"
+  toHtml p = toHtml $ "\\(" <> showPolynomial p <> "\\)"
 
 instance ToHtml Function where
-  toHtml f = toHtml $ "\\[" <> fName f <> "(x) = " <> showPolynomial (polynomial f) <> "\\]"
+  toHtml f = toHtml $ "\\(" <> fName f <> "(x) = " <> showPolynomial (polynomial f) <> "\\)"
 
 makeSameLength :: ([Int], [Int]) -> ([Int], [Int])
 makeSameLength (p1, p2) =
@@ -100,27 +100,36 @@ instance FromJSON Question
 
 instance FromForm Question
 
+data Footer = Footer
+
+instance ToHtml Footer where
+  toHtml Footer =
+    div_ [class_ "flex justify-center"] (form_ [style_ "text-align:center", hxPost_ "questionPost", hxTarget_ "#main-content"] (div_ [class_ "input-group"] (input_ [type_ "text", name_ "qid", placeholder_ "Velg oppgave", class_ "input input-bordered"] <> button_ [class_ "btn btn-square"] "Gå")))
+
 instance ToHtml Question where
   toHtml (Question qid) =
-    h1_ [style_ "text-align:center"] ("Oppgave " <> show qid)
-      <> p_ [style_ "text-align:center"] "Derivér:"
-      <> div_ [style_ "text-align:center; height: 60px; box-sizing: border-box;", hxGet_ ("questionPolynomial/" <> show qid), hxTrigger_ "load"] ""
-      <> div_ [style_ "text-align:center; height: 100px; box-sizing: border-box;"] (button_ [style_ "text-align:center", hxGet_ ("answer/" <> show qid), hxSwap_ "outerHTML"] "Vis fasit")
-      <> div_ [style_ "text-align:center"] (button_ [style_ "text-align:center", hxGet_ ("question/" <> show (qid + 1)), hxTarget_ "#main-content"] "Neste oppgave")
+    div_ [class_ "navbar bg-base-300"] (a_ [class_ "text-xl"] ("Oppgave " <> show qid))
       <> div_ [style_ "height: 50px;"] ""
-      <> form_ [style_ "text-align:center", hxPost_ "questionPost", hxTarget_ "#main-content"] (input_ [type_ "text", name_ "qid", size_ "4"] <> button_ [type_ "submit"] "Gå til oppgave")
+      <> div_ [class_ "flex justify-center"] (a_ [class_ "text-xl"] "Derivér:")
+      <> div_ [style_ "height: 10px;"] ""
+      <> div_ [style_ "text-align:center; height: 80px; box-sizing: border-box;", class_ "text-xl", hxGet_ ("questionPolynomial/" <> show qid), hxTrigger_ "load", placeholder_ ""] ""
+      <> div_ [style_ "text-align:center; height: 120px; box-sizing: border-box;", class_ "text-xl"] (button_ [class_ "btn no-animation", style_ "text-align:center", hxGet_ ("answer/" <> show qid), hxSwap_ "outerHTML"] "Vis fasit")
+      <> div_ [style_ "text-align:center"] (button_ [class_ "btn", style_ "text-align:center", hxGet_ ("question/" <> show (qid + 1)), hxTarget_ "#main-content"] "Neste oppgave")
+      <> div_ [style_ "height: 50px;"] ""
 
 newtype Answer = Answer Integer
 
 instance ToHtml Answer where
   toHtml (Answer qid) =
     div_ "Fasit:"
+      <> div_ [style_ "height: 10px;"] ""
       <> div_ [hxGet_ ("answerPolynomial/" <> show qid), hxTrigger_ "load"] ""
 
 type UserAPI =
   "htmx.min.js" :> Get '[JS] ByteString
     :<|> Get '[HTML] (Html ())
     :<|> "question" :> Capture "id" Integer :> Get '[HTML] Question
+    :<|> "footer" :> Get '[HTML] Footer
     :<|> "questionPost" :> ReqBody '[FormUrlEncoded] Question :> Post '[HTML] Question
     :<|> "questionPolynomial" :> Capture "id" Integer :> Get '[HTML] (Headers '[HXTriggerAfterSwap] Function)
     :<|> "answer" :> Capture "id" Integer :> Get '[HTML] Answer
@@ -134,6 +143,7 @@ server =
   ( return $(embedFile "htmx.min.js")
       :<|> (return . toHtmlRaw $ $(embedFile "index.html"))
       :<|> (pure . Question)
+      :<|> (pure Footer)
       :<|> pure
       :<|> ( fmap (addHeader "myEvent") . liftIO
                . fmap (Function "f")
